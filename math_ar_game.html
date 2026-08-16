@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>คณิตศาสตร์ AR: การคูณทศนิยมไม่เกิน สามตำแหน่งกับ 10 100 1,000 ป.5</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Sarabun & Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- MediaPipe Hands & Camera Utils -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <style>
+        body {
+            font-family: 'Sarabun', 'Inter', sans-serif;
+            touch-action: none;
+            overflow: hidden;
+            background: #0f172a;
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        /* Custom animations */
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.6); }
+            50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.9); }
+        }
+        .sphere-glow {
+            animation: pulse-glow 2s infinite;
+        }
+    </style>
+</head>
+<body class="text-white h-screen w-screen flex flex-col justify-between select-none relative">
+
+    <!-- Hidden Video Feed for MediaPipe -->
+    <video id="webcam" class="absolute inset-0 w-full h-full object-cover -z-20 transform -scale-x-100 opacity-60" autoplay playsinline></video>
+    
+    <!-- AR Canvas Overlay -->
+    <canvas id="arCanvas" class="absolute inset-0 w-full h-full -z-10"></canvas>
+
+    <!-- Top HUD Header -->
+    <header class="w-full p-2 sm:p-4 flex flex-col sm:flex-row justify-between items-center glass-panel z-10 shadow-lg border-b border-slate-700/50">
+        <div class="flex items-center space-x-2 sm:space-x-3 mb-2 sm:mb-0 w-full sm:w-auto justify-center sm:justify-start">
+            <div class="bg-indigo-600 text-white p-2 rounded-xl sm:rounded-2xl shadow-md font-bold text-base sm:text-lg flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 shrink-0">
+                AR
+            </div>
+            <div class="text-center sm:text-left">
+                <h1 class="text-base sm:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 truncate max-w-[220px] sm:max-w-none">AR การคูณทศนิยม ป.5 </h1>
+                <p id="levelIndicator" class="text-[10px] sm:text-xs text-cyan-300 truncate">เลเวล 1: สุ่มโจทย์การคูณ (10, 100, 1000)</p>
+            </div>
+        </div>
+
+
+
+
+
+
+
+
+
+
+
+<a href="code_artifact.html">
+
+           <button onclick="switchPage(1)" class="mt-2 md:mt-4 text-green-600 hover:text-green-800 font-medium flex items-center gap-2 bg-white px-6 md:px-8 py-2 md:py-3 rounded-full shadow text-lg md:text-xl z-20 mb-8 md:mb-0 relative">
+                <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                กลับหน้าแรก
+            </button>
+</a>
+
+
+
+
+
+
+
+        <div class="flex items-center space-x-2 sm:space-x-6 w-full sm:w-auto justify-center sm:justify-end">
+            <!-- Score -->
+            <div class="flex flex-col items-center bg-slate-800/80 px-3 sm:px-4 py-1 sm:py-1.5 rounded-xl border border-slate-700 shrink-0">
+                <span class="text-[10px] sm:text-xs text-slate-400">คะแนนสะสม</span>
+                <span id="scoreDisplay" class="text-lg sm:text-2xl font-bold text-yellow-400 leading-none mt-1">0</span>
+            </div>
+            <!-- Timer / Health Bar -->
+            <div class="flex flex-col items-center bg-slate-800/80 px-3 sm:px-4 py-1 sm:py-1.5 rounded-xl border border-slate-700 flex-1 sm:flex-none sm:min-w-[140px] max-w-[200px]">
+                <div class="flex justify-between w-full text-[10px] sm:text-xs text-slate-300 mb-1">
+                    <span>เวลาที่เหลือ</span>
+                    <span id="timerText" class="font-bold text-emerald-400">60s</span>
+                </div>
+                <div class="w-full bg-slate-700 h-2 sm:h-2.5 rounded-full overflow-hidden">
+                    <div id="timerBar" class="bg-gradient-to-r from-emerald-500 to-cyan-400 h-full w-full transition-all duration-300"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Game Area / Question Display -->
+    <main class="flex-1 flex flex-col items-center justify-start relative p-2 sm:p-4 pt-4 sm:pt-12 z-10 pointer-events-none">
+        <div id="questionContainer" class="glass-panel px-4 sm:px-8 py-3 sm:py-6 rounded-2xl sm:rounded-3xl shadow-2xl text-center max-w-xl w-full transform transition-all duration-300 scale-100 border-2 border-indigo-500/40 mt-2 sm:mt-0">
+            <span class="text-[9px] sm:text-[10px] md:text-xs font-semibold uppercase tracking-wider text-indigo-400 bg-indigo-950/80 px-2 sm:px-3 py-1 rounded-full border border-indigo-700/50">โจทย์ปัญหาคณิตศาสตร์</span>
+            <div id="mathProblem" class="text-xl sm:text-3xl md:text-4xl font-extrabold my-2 sm:my-4 text-white tracking-wide break-words">
+                กำลังโหลดโจทย์...
+            </div>
+            <p id="instructionHint" class="text-[10px] sm:text-xs md:text-sm text-slate-300 mt-1 sm:mt-2 hidden sm:block">
+                🖐️ ใช้ฝ่ามือเลื่อนไปวางบนลูกบอลคำตอบซ้ายหรือขวา ค้างไว้ 2 วินาทีเพื่อเลือก!
+            </p>
+        </div>
+    </main>
+
+    <!-- Footer / Camera Mode Toggle -->
+    <footer class="w-full p-2 sm:p-4 flex flex-col sm:flex-row justify-between items-center glass-panel z-10 text-[10px] sm:text-xs text-slate-400 space-y-2 sm:space-y-0">
+        <div class="flex items-center space-x-2 text-center sm:text-left w-full sm:w-auto justify-center sm:justify-start">
+            <span id="handStatus" class="inline-block w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-500 shrink-0"></span>
+            <span id="handStatusText" class="truncate">กำลังค้นหาฝ่ามือ... (แตะจอแทนได้หากไม่มีกล้อง)</span>
+        </div>
+        <div class="flex space-x-2 w-full sm:w-auto justify-center sm:justify-end">
+            <button onclick="toggleControlMode()" id="modeToggleBtn" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 sm:px-3 sm:py-1.5 rounded-lg font-medium transition shrink-0">
+                สลับโหมด: ใช้เมาส์/สัมผัส
+            </button>
+            <button onclick="openInstructions()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 sm:px-3 sm:py-1.5 rounded-lg font-medium transition shrink-0">
+                วิธีเล่น
+            </button>
+        </div>
+    </footer>
+
+    <!-- Welcome Modal -->
+    <div id="welcomeModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
+        <div class="glass-panel p-6 sm:p-8 rounded-3xl max-w-lg w-full text-center shadow-2xl border border-indigo-500/50 max-h-[95vh] overflow-y-auto">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-tr from-indigo-600 to-cyan-500 rounded-2xl sm:rounded-3xl mx-auto flex items-center justify-center text-3xl sm:text-4xl mb-3 sm:mb-4 shadow-lg shadow-indigo-500/40">
+                🧮
+            </div>
+            <h2 class="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2 ">AR การคูณทศนิยมไม่เกิน สามตำแหน่งกับ 10 100 1,000</h2>
+            <p class="text-slate-300 text-xs sm:text-sm mb-4 sm:mb-6 leading-relaxed">
+                ฝึกทักษะการคูณทศนิยมไม่เกิน 3 ตำแหน่งด้วย 10, 100 และ 1000<br>
+                ผ่านระบบตรวจจับฝ่ามือ AR หรือใช้สัมผัสเลือกคำตอบบนจอมือถือ!
+            </p>
+            <div class="bg-slate-900/60 p-3 sm:p-4 rounded-2xl text-left text-[10px] sm:text-xs text-slate-300 mb-4 sm:mb-6 space-y-2 border border-slate-800">
+                <div class="flex items-start sm:items-center space-x-2">
+                    <span class="text-cyan-400 font-bold shrink-0">• เลเวล 1:</span>
+                    <span>สุ่มโจทย์คูณทศนิยม (สะสมครบ 10 คะแนนเพื่อผ่านสู่เลเวล 2)</span>
+                </div>
+                <div class="flex items-start sm:items-center space-x-2">
+                    <span class="text-fuchsia-400 font-bold shrink-0">• เลเวล 2:</span>
+                    <span>โจทย์หาตัวคูณที่หายไป (10, 100, 1000) เล่นสะสมคะแนนจนกว่าเวลาจะหมด!</span>
+                </div>
+                <div class="flex items-start sm:items-center space-x-2">
+                    <span class="text-emerald-400 font-bold shrink-0">• กติกา:</span>
+                    <span>ตอบถูกได้ +2 คะแนน และเวลาเพิ่ม +2 วินาที | ตอบผิดเวลาลด -5 วินาที</span>
+                </div>
+            </div>
+<button onclick="startGame()" class="w-full py-3 sm:py-3.5 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-bold rounded-2xl shadow-lg shadow-cyan-500/25 transition transform active:scale-95 text-sm sm:text-base">
+    เริ่มเกมกันเลย! 🚀
+</button>
+
+<!-- ย้าย audio มาไว้ข้างนอกปุ่ม และใส่ loop -->
+<audio id="bgMusicST5" src="A1.mp3" loop></audio>
+
+
+<div style="margin-top: 15px;">
+
+    <a href="code_artifact2.html">
+     <button onclick="next()" class="w-full py-3 sm:py-3.5 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-bold rounded-2xl shadow-lg shadow-cyan-500/25 transition transform active:scale-95 text-sm sm:text-base">
+                    
+                    ย้อนกลับ
+                </button>
+</a>
+</div>
+
+
+
+        </div>
+
+
+        
+    </div>
+
+    <!-- Game Over / Victory Modal -->
+    <div id="gameOverModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center z-50 p-4">
+        <div class="glass-panel p-8 rounded-3xl max-w-md w-full text-center shadow-2xl border border-indigo-500/50">
+            <div id="gameOverIcon" class="text-5xl mb-3">⏱️</div>
+            <h2 id="gameOverTitle" class="text-2xl font-bold text-white mb-2">หมดเวลา!</h2>
+            <p id="gameOverMessage" class="text-slate-300 text-sm mb-6">มาดูคะแนนสะสมของคุณกัน!</p>
+            <div class="bg-slate-900/60 p-4 rounded-2xl mb-6 flex justify-around">
+                <div>
+                    <span class="text-xs text-slate-400 block">คะแนนสุดท้าย</span>
+                    <span id="finalScore" class="text-2xl font-bold text-yellow-400">20</span>
+                </div>
+                <div>
+                    <span class="text-xs text-slate-400 block">เวลาเหลือ</span>
+                    <span id="finalTime" class="text-2xl font-bold text-emerald-400">15s</span>
+                </div>
+            </div>
+            <button onclick="restartGame()" class="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-bold rounded-2xl shadow-lg transition">
+                เล่นอีกครั้ง 🔄
+            </button>
+        </div>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructionsModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center z-50 p-4">
+        <div class="glass-panel p-6 sm:p-8 rounded-3xl max-w-md w-full text-center shadow-2xl border border-indigo-500/50 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-lg sm:text-xl font-bold text-white mb-3">วิธีเล่นเกม</h3>
+            <p class="text-slate-300 text-xs sm:text-sm mb-4 text-left leading-relaxed">
+                1. ดูโจทย์คณิตศาสตร์ที่ปรากฏตรงกลางจอด้านบน<br>
+                2. เลือกคำตอบที่ถูกต้องโดยยื่นฝ่ามือไปบังที่ลูกบอลซ้ายหรือขวา (หรือใช้นิ้วแตะค้างที่จอ)<br>
+                3. แช่มือ/แตะค้างไว้ 2 วินาที เพื่อยืนยันคำตอบ (สังเกตหลอดสีเต็มวง)<br>
+                4. สะสมคะแนนให้มากที่สุดก่อนเวลาชีวิตจะหมดลง!
+            </p>
+            <button onclick="closeInstructions()" class="w-full py-2.5 sm:py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition text-sm sm:text-base">
+                เข้าใจแล้ว
+            </button>
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <script>
+
+
+
+
+
+
+
+
+
+
+
+
+        // Audio synthesis for satisfying sound effects
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15);
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'hover') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.1);
+            }
+        }
+
+        // Game State Variables
+        let gameState = 'welcome'; // welcome, playing, gameover, victory
+        let level = 1;
+        let score = 0;
+        let timeRemaining = 60;
+        let maxTime = 60;
+        let timerInterval = null;
+        let currentProblem = null;
+        let controlMode = 'ar'; // 'ar' or 'mouse'
+
+        // Hand tracking variables
+        let handX = -100, handY = -100;
+        let isHandDetected = false;
+        let hoverStartTime = null;
+        let hoveredSphereIndex = null;
+        const HOVER_DURATION = 2000; // 2 seconds
+
+        // Canvas & Graphics
+        const canvas = document.getElementById('arCanvas');
+        const ctx = canvas.getContext('2d');
+        let spheres = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Re-calculate sphere positions dynamically on resize to keep them responsive
+            if (currentProblem && spheres.length === 2) {
+                const w = canvas.width;
+                const h = canvas.height;
+                const yPos = h * 0.65; 
+                
+                const dynamicRadius = Math.max(38, Math.min(65, w * 0.12));
+                
+                // คำนวณระยะห่างจากขอบจอ (บวกรัศมีเข้าไปเพื่อให้ขอบวงกลมห่างจากขอบจอเล็กน้อยเสมอ)
+                const edgeMargin = Math.max(15, w * 0.04);
+                const xOffset = edgeMargin + dynamicRadius;
+
+                spheres[0].x = xOffset;
+                spheres[0].y = yPos;
+                spheres[0].radius = dynamicRadius;
+
+                spheres[1].x = w - xOffset;
+                spheres[1].y = yPos;
+                spheres[1].radius = dynamicRadius;
+            }
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function generateProblem() {
+            // Level 1: Random decimal (up to 3 decimal places) * 10, 100, 1000
+            // Level 2: Decimal * [10, 100, 1000] missing = product, e.g. 4.56 * [?] = 456
+            if (level === 1) {
+                const multipliers = [10, 100, 1000];
+                const multiplier = multipliers[Math.floor(Math.random() * multipliers.length)];
+                
+                // Generate decimal up to 3 places
+                const decPlaces = Math.floor(Math.random() * 3) + 1;
+                const rawNum = Math.floor(Math.random() * 900 + 10); // 10 to 910
+                const decimalNum = Number((rawNum / Math.pow(10, decPlaces)).toFixed(decPlaces));
+                
+                const correctAnswer = Number((decimalNum * multiplier).toFixed(3));
+                
+                // Generate distractor
+                let distractorOffset = (Math.random() > 0.5 ? 1 : -1) * (multiplier / 10);
+                let distractor = Number((correctAnswer + distractorOffset).toFixed(3));
+                if (distractor === correctAnswer || distractor < 0) {
+                    distractor = Number((correctAnswer * 10).toFixed(3));
+                }
+
+                const options = [correctAnswer, distractor].sort(() => Math.random() - 0.5);
+                const correctIndex = options.indexOf(correctAnswer);
+
+                currentProblem = {
+                    text: `${decimalNum} × ${multiplier} = ?`,
+                    options: options,
+                    correctIndex: correctIndex,
+                    answer: correctAnswer
+                };
+            } else {
+                // Level 2: Missing multiplier
+                const multipliers = [10, 100, 1000];
+                const multiplier = multipliers[Math.floor(Math.random() * multipliers.length)];
+                
+                const decPlaces = Math.floor(Math.random() * 3) + 1;
+                const rawNum = Math.floor(Math.random() * 900 + 10);
+                const decimalNum = Number((rawNum / Math.pow(10, decPlaces)).toFixed(decPlaces));
+                const product = Number((decimalNum * multiplier).toFixed(3));
+
+                const wrongMultipliers = multipliers.filter(m => m !== multiplier);
+                const distractorMultiplier = wrongMultipliers[Math.floor(Math.random() * wrongMultipliers.length)];
+
+                const options = [multiplier, distractorMultiplier].sort(() => Math.random() - 0.5);
+                const correctIndex = options.indexOf(multiplier);
+
+                currentProblem = {
+                    text: `${decimalNum} × [ ? ] = ${product}`,
+                    options: options,
+                    correctIndex: correctIndex,
+                    answer: multiplier
+                };
+            }
+
+            document.getElementById('mathProblem').innerText = currentProblem.text;
+            setupSpheres();
+        }
+
+        function setupSpheres() {
+            const w = canvas.width;
+            const h = canvas.height;
+            
+            // จัดตำแหน่งลูกบอลให้อยู่บริเวณกลาง-ล่างของจอ
+            const yPos = h * 0.65; 
+            // ลดขนาดรัศมีลูกบอลลงเล็กน้อยเพื่อให้พอดีและไม่ใหญ่จนเกินไป
+            const dynamicRadius = Math.max(38, Math.min(65, w * 0.12));
+            
+            // คำนวณระยะห่างจากขอบจอ ให้ขอบวงกลมห่างจากขอบจอเล็กน้อยเสมอ
+            const edgeMargin = Math.max(15, w * 0.04);
+            const xOffset = edgeMargin + dynamicRadius;
+
+            spheres = [
+                {
+                    x: xOffset,
+                    y: yPos,
+                    radius: dynamicRadius,
+                    label: currentProblem.options[0],
+                    index: 0,
+                    color: '#3b82f6',
+                    hoverProgress: 0
+                },
+                {
+                    x: w - xOffset,
+                    y: yPos,
+                    radius: dynamicRadius,
+                    label: currentProblem.options[1],
+                    index: 1,
+                    color: '#8b5cf6',
+                    hoverProgress: 0
+                }
+            ];
+        }
+
+        const videoElement = document.getElementById('webcam');
+
+        // --- Interaction & Tracking Logic ---
+        let camera = null;
+        let hands = null;
+
+        function onResults(results) {
+            if (!isHandDetected && results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                isHandDetected = true;
+                document.getElementById('handStatus').classList.replace('bg-red-500', 'bg-emerald-500');
+                document.getElementById('handStatusText').innerText = 'ตรวจพบฝ่ามือแล้ว!';
+            } else if (isHandDetected && (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0)) {
+                isHandDetected = false;
+                document.getElementById('handStatus').classList.replace('bg-emerald-500', 'bg-red-500');
+                document.getElementById('handStatusText').innerText = 'กำลังค้นหาฝ่ามือ... (ใช้เมาส์คลิก/แตะแทนได้หากไม่มีเว็บแคม)';
+                if (controlMode === 'ar') {
+                    handX = -100;
+                    handY = -100;
+                }
+            }
+
+            if (controlMode === 'ar' && results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                // Use the center of the palm (landmark 9)
+                const landmark = results.multiHandLandmarks[0][9]; 
+                // The webcam image is mirrored
+                handX = (1 - landmark.x) * canvas.width;
+                handY = landmark.y * canvas.height;
+            }
+        }
+
+        function initAR() {
+            if (!hands) {
+                hands = new Hands({locateFile: (file) => {
+                    return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+                }});
+                hands.setOptions({
+                    maxNumHands: 1,
+                    modelComplexity: 1,
+                    minDetectionConfidence: 0.7,
+                    minTrackingConfidence: 0.7
+                });
+                hands.onResults(onResults);
+            }
+
+            if (!camera) {
+                camera = new Camera(videoElement, {
+                    onFrame: async () => {
+                        await hands.send({image: videoElement});
+                    },
+                    width: 640,
+                    height: 480
+                });
+                camera.start();
+            }
+        }
+
+        // Mouse / Touch Controls
+        function handlePointer(e) {
+            if (controlMode !== 'mouse') return;
+            let clientX = e.clientX;
+            let clientY = e.clientY;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            }
+            handX = clientX;
+            handY = clientY;
+        }
+        window.addEventListener('mousemove', handlePointer);
+        window.addEventListener('touchmove', handlePointer, {passive: false});
+
+        function toggleControlMode() {
+            if (controlMode === 'ar') {
+                controlMode = 'mouse';
+                document.getElementById('modeToggleBtn').innerText = 'สลับโหมด: AR (กล้อง)';
+                document.getElementById('handStatusText').innerText = 'ใช้เมาส์/สัมผัสเพื่อเล่น';
+                document.getElementById('handStatus').classList.replace('bg-red-500', 'bg-blue-500');
+                document.getElementById('handStatus').classList.replace('bg-emerald-500', 'bg-blue-500');
+            } else {
+                controlMode = 'ar';
+                document.getElementById('modeToggleBtn').innerText = 'สลับโหมด: ใช้เมาส์/สัมผัส';
+                handX = -100; handY = -100;
+                isHandDetected = false;
+                document.getElementById('handStatus').classList.replace('bg-blue-500', 'bg-red-500');
+                document.getElementById('handStatusText').innerText = 'กำลังค้นหาฝ่ามือ...';
+            }
+        }
+
+        // --- UI & Game Controls ---
+        function startGame() {
+            document.getElementById('welcomeModal').classList.add('hidden');
+            document.getElementById('gameOverModal').classList.add('hidden');
+            document.getElementById('instructionsModal').classList.add('hidden');
+            
+const bgMusic = document.getElementById("bgMusicST5");
+    if (bgMusic) {
+        bgMusic.play().catch(e => console.log("ไม่สามารถเล่นเสียงได้:", e));
+    }
+
+
+            level = 1;
+            score = 0;
+            timeRemaining = maxTime;
+            updateUI();
+            generateProblem();
+            gameState = 'playing';
+            
+            if (controlMode === 'ar') {
+                initAR();
+            }
+            
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (gameState === 'playing') {
+                    timeRemaining--;
+                    updateUI();
+                    if (timeRemaining <= 0) {
+                        endGame();
+                    }
+                }
+            }, 1000);
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        function openInstructions() {
+            document.getElementById('instructionsModal').classList.remove('hidden');
+            document.getElementById('instructionsModal').classList.add('flex');
+        }
+
+        function closeInstructions() {
+            document.getElementById('instructionsModal').classList.add('hidden');
+            document.getElementById('instructionsModal').classList.remove('flex');
+        }
+
+        function updateUI() {
+            document.getElementById('scoreDisplay').innerText = score;
+            document.getElementById('timerText').innerText = `${timeRemaining}s`;
+            
+            const timerPercent = Math.max(0, (timeRemaining / maxTime) * 100);
+            document.getElementById('timerBar').style.width = `${timerPercent}%`;
+            
+            if (timeRemaining <= 10) {
+                document.getElementById('timerBar').classList.remove('from-emerald-500', 'to-cyan-400');
+                document.getElementById('timerBar').classList.add('from-red-500', 'to-orange-400');
+            } else {
+                document.getElementById('timerBar').classList.remove('from-red-500', 'to-orange-400');
+                document.getElementById('timerBar').classList.add('from-emerald-500', 'to-cyan-400');
+            }
+
+            if (score >= 10 && level === 1) {
+                level = 2;
+                document.getElementById('levelIndicator').innerText = 'เลเวล 2: หาตัวคูณที่หายไป (10, 100, 1000)';
+                document.getElementById('levelIndicator').classList.replace('text-cyan-300', 'text-fuchsia-300');
+                document.getElementById('questionContainer').classList.replace('border-indigo-500/40', 'border-fuchsia-500/40');
+            } else if (level === 1) {
+                document.getElementById('levelIndicator').innerText = 'เลเวล 1: สุ่มโจทย์การคูณ (10, 100, 1000)';
+                document.getElementById('levelIndicator').classList.replace('text-fuchsia-300', 'text-cyan-300');
+                document.getElementById('questionContainer').classList.replace('border-fuchsia-500/40', 'border-indigo-500/40');
+            }
+        }
+
+        function checkAnswer(selectedIndex) {
+            if (gameState !== 'playing') return;
+            
+            const isCorrect = currentProblem.correctIndex === selectedIndex;
+            
+            if (isCorrect) {
+                playSound('correct');
+                score += 2;
+                timeRemaining = Math.min(maxTime, timeRemaining + 2);
+                createParticles(spheres[selectedIndex].x, spheres[selectedIndex].y, '#10b981');
+                
+                updateUI();
+                generateProblem();
+            } else {
+                playSound('wrong');
+                timeRemaining = Math.max(0, timeRemaining - 5);
+                createParticles(spheres[selectedIndex].x, spheres[selectedIndex].y, '#ef4444');
+                
+                document.getElementById('questionContainer').classList.add('animate-pulse', 'border-red-500/80');
+                setTimeout(() => {
+                    document.getElementById('questionContainer').classList.remove('animate-pulse', 'border-red-500/80');
+                }, 500);
+
+                if (timeRemaining <= 0) {
+                    endGame();
+                } else {
+                    updateUI();
+                }
+            }
+        }
+
+        function endGame() {
+            gameState = 'gameover';
+            clearInterval(timerInterval);
+            
+            const modal = document.getElementById('gameOverModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            document.getElementById('gameOverTitle').innerText = 'หมดเวลา! ⏱️';
+            document.getElementById('gameOverMessage').innerText = `ยอดเยี่ยม! คุณทำคะแนนสะสมไปได้ทั้งหมด ${score} คะแนน`;
+                
+            document.getElementById('finalScore').innerText = score;
+            document.getElementById('finalTime').innerText = `0s`;
+
+
+
+function goHome() {
+    // หยุดเวลา
+    if (timerInterval) clearInterval(timerInterval);
+    gameState = 'welcome';
+    
+    // หยุดเพลงพื้นหลัง
+    const bgMusic = document.getElementById("bgMusicST5");
+    if (bgMusic) {
+        bgMusic.pause();
+        bgMusic.currentTime = 0;
+    }
+    
+    // แสดงหน้าแรก (Welcome Modal) และซ่อนหน้าต่างอื่นๆ
+    document.getElementById('welcomeModal').classList.remove('hidden');
+    document.getElementById('gameOverModal').classList.add('hidden');
+    document.getElementById('instructionsModal').classList.add('hidden');
+    
+    // รีเซ็ตตำแหน่งมือเพื่อไม่ให้เผลอกดปุ่มอื่นตอนกลับมา
+    handX = -100;
+    handY = -100;
+}
+
+
+
+
+
+
+
+
+        }
+
+        
+
+        // --- Rendering ---
+        let particles = [];
+        function createParticles(x, y, color) {
+            for (let i = 0; i < 20; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    radius: Math.random() * 5 + 2,
+                    color: color,
+                    life: 1.0
+                });
+            }
+        }
+
+        function drawParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.02;
+                
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+                
+                ctx.globalAlpha = p.life;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = p.color;
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        let lastTime = 0;
+        function gameLoop(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            const dt = timestamp - lastTime;
+            lastTime = timestamp;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (gameState === 'playing') {
+                let isHoveringAny = false;
+
+                spheres.forEach((sphere, idx) => {
+                    const dx = handX - sphere.x;
+                    const dy = handY - sphere.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < sphere.radius + 20) {
+                        isHoveringAny = true;
+                        if (hoveredSphereIndex !== idx) {
+                            hoveredSphereIndex = idx;
+                            hoverStartTime = timestamp;
+                            playSound('hover');
+                        }
+                        
+                        const hoverDuration = timestamp - hoverStartTime;
+                        sphere.hoverProgress = Math.min(1, hoverDuration / HOVER_DURATION);
+                        
+                        if (sphere.hoverProgress >= 1) {
+                            checkAnswer(idx);
+                            hoveredSphereIndex = null;
+                            hoverStartTime = null;
+                            sphere.hoverProgress = 0;
+                        }
+                    } else {
+                        if (hoveredSphereIndex === idx) {
+                            hoveredSphereIndex = null;
+                            hoverStartTime = null;
+                        }
+                        sphere.hoverProgress = Math.max(0, sphere.hoverProgress - (dt / 500));
+                    }
+
+                    // Render Sphere
+                    ctx.save();
+                    
+                    if (sphere.hoverProgress > 0) {
+                        ctx.shadowColor = '#38bdf8';
+                        ctx.shadowBlur = 25;
+                    }
+
+                    const grad = ctx.createRadialGradient(sphere.x - 15, sphere.y - 15, 8, sphere.x, sphere.y, sphere.radius);
+                    grad.addColorStop(0, idx === 0 ? '#60a5fa' : '#a78bfa');
+                    grad.addColorStop(1, idx === 0 ? '#1e40af' : '#5b21b6');
+                    
+                    ctx.beginPath();
+                    ctx.arc(sphere.x, sphere.y, sphere.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+                    ctx.lineWidth = 4;
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.stroke();
+
+                    if (sphere.hoverProgress > 0) {
+                        ctx.beginPath();
+                        ctx.arc(sphere.x, sphere.y, sphere.radius + 8, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * sphere.hoverProgress));
+                        ctx.lineWidth = 6;
+                        ctx.strokeStyle = '#06b6d4';
+                        ctx.stroke();
+                    }
+
+                    ctx.fillStyle = '#ffffff';
+                    const fontSize = Math.floor(sphere.radius * 0.4); 
+                    ctx.font = `bold ${fontSize}px "Sarabun", sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(sphere.label, sphere.x, sphere.y);
+
+                    ctx.restore();
+                });
+
+                if (!isHoveringAny) {
+                    hoveredSphereIndex = null;
+                    hoverStartTime = null;
+                }
+
+                // Draw cursor/hand
+                if (handX > 0 && handY > 0) {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(handX, handY, 12, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                    ctx.fill();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#38bdf8';
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.arc(handX, handY, 20, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+
+            drawParticles();
+
+            if (gameState !== 'welcome') {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+
+
+
+                // ฟังก์ชันเริ่มใหม่
+        function next() {
+            isRevealed = false;
+            const inputs = document.querySelectorAll('input[type="text"]');
+            inputs.forEach(input => {
+                input.value = '';
+                input.disabled = false;
+                input.classList.remove('text-gray-800', 'border-gray-500');
+                input.classList.add('text-red-600', 'font-bold', 'border-transparent');
+                
+                const iconDiv = input.nextElementSibling;
+                iconDiv.innerHTML = '';
+            });
+        }
+
+
+
+
+        
+        // Initialize UI on load
+        updateUI();
+
+
+
+
+
+
+
+    </script>
+</body>
+</html>

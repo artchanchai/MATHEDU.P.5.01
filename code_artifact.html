@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ใบกิจกรรมที่ 1 หาผลคูณ</title>
+    <!-- โหลด Tailwind CSS สำหรับจัดการความสวยงามและ Responsive -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- โหลด Font Kanit เพื่อความสวยงามอ่านง่าย -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+        }
+        /* เอาเส้นขอบล่างของ input ออกเวลาพิมพ์ */
+        input:focus {
+            outline: none;
+        }
+        /* ซ่อนลูกศรขึ้นลงใน input type number (เผื่อใช้) */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="bg-orange-100 min-h-screen flex items-center justify-center p-2 sm:p-4 md:p-8">
+
+    <div class="w-full max-w-5xl bg-gray-100 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden relative">
+        
+        <!-- Header -->
+        <div class="bg-teal-700 p-4 sm:p-6 md:p-8 text-center rounded-t-2xl sm:rounded-t-3xl border-b-4 sm:border-b-8 border-teal-800">
+            <h1 class="text-xl sm:text-3xl md:text-5xl font-bold text-white tracking-wide shadow-sm">
+                กิจกรรมการหาผลคูณ
+            </h1>
+        </div>
+
+        <!-- Content Area -->
+        <div class="p-3 sm:p-6 md:p-10 relative z-10">
+            
+            <!-- กล่องคำถาม Grid Layout -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8" id="quiz-container">
+                <!-- โค้ด HTML ในส่วนนี้จะถูกสร้างด้วย JavaScript เพื่อความสะดวกในการจัดการข้อมูล -->
+            </div>
+
+            <div class="mt-8 sm:mt-12 flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4">
+                <button onclick="checkAnswers()" class="w-full sm:w-auto flex justify-center items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-6 py-3 sm:py-4 rounded-xl sm:rounded-full font-bold text-base sm:text-lg transition-transform transform hover:scale-105 shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    ตรวจคำตอบ
+                </button>
+                <button onclick="revealAnswers()" class="w-full sm:w-auto flex justify-center items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 px-6 py-3 sm:py-4 rounded-xl sm:rounded-full font-bold text-base sm:text-lg transition-transform transform hover:scale-105 shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    ดูเฉลย
+                </button>
+                <button onclick="resetQuiz()" class="w-full sm:w-auto flex justify-center items-center gap-2 bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 sm:py-4 rounded-xl sm:rounded-full font-bold text-base sm:text-lg transition-transform transform hover:scale-105 shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    เริ่มใหม่
+                </button>
+
+<a href="code_artifact2.html">
+     <button onclick="next()" class="w-full sm:w-auto flex justify-center items-center gap-2 bg-green-300 hover:bg-green-400 text-green-800 px-6 py-3 sm:py-4 rounded-xl sm:rounded-full font-bold text-base sm:text-lg transition-transform transform hover:scale-105 shadow-md">
+                    <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    หน้าถัดไป
+                </button>
+</a>
+
+            </div>
+        </div>
+
+        <div class="hidden sm:flex absolute bottom-4 right-4 sm:bottom-8 sm:right-8 flex-wrap w-24 gap-1 opacity-80 pointer-events-none">
+            <div class="bg-yellow-400 p-2 rounded-lg text-white transform -rotate-12 shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" /></svg>
+            </div>
+            <div class="bg-pink-400 p-2 rounded-lg text-white transform rotate-12 shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ข้อมูลโจทย์
+        const quizData = [
+            {
+                id: 1,
+                questions: [
+                    { q: "5 &times; 10", a: "50" },
+                    { q: "5 &times; 100", a: "500" },
+                    { q: "5 &times; 1,000", a: "5000" }
+                ]
+            },
+            {
+                id: 2,
+                questions: [
+                    { q: "37 &times; 10", a: "370" },
+                    { q: "37 &times; 100", a: "3700" },
+                    { q: "37 &times; 1,000", a: "37000" }
+                ]
+            },
+            {
+                id: 3,
+                questions: [
+                    { q: "135 &times; 10", a: "1350" },
+                    { q: "135 &times; 100", a: "13500" },
+                    { q: "135 &times; 1,000", a: "135000" }
+                ]
+            }
+        ];
+
+        let isRevealed = false; // สถานะว่ากำลังดูเฉลยอยู่หรือไม่
+
+        // ฟังก์ชันสร้างหน้าตา UI ของกล่องคำถาม
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = ''; // ล้างของเก่า
+
+            quizData.forEach((group, groupIndex) => {
+                // ถ้าเป็นข้อสุดท้าย (ข้อ 3) ให้จัดให้อยู่ตรงกลางบรรทัดใหม่บนจอใหญ่
+                let extraClass = '';
+                if (groupIndex === 2) {
+                    extraClass = 'lg:col-span-2 flex justify-center';
+                }
+
+                let html = `<div class="${extraClass}">`;
+                // ห่อหุ้มโครงสร้างกล่อง
+                html += `<div class="bg-yellow-50 border-2 sm:border-4 border-dashed border-blue-400 p-4 sm:p-6 rounded-xl shadow-sm relative mt-2 sm:mt-0 ${groupIndex === 2 ? 'w-full lg:w-3/4 xl:w-2/3' : 'w-full'}">`;
+                
+                // เลขข้อ
+                html += `<span class="absolute -top-3 -left-3 sm:-top-4 sm:-left-4 bg-blue-500 text-white w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full font-bold text-base sm:text-xl shadow-sm">${group.id}</span>`;
+                
+                html += `<div class="flex flex-col gap-3 sm:gap-4 text-lg sm:text-2xl md:text-3xl text-gray-800 font-medium mt-1 sm:mt-2">`;
+                
+                // วนลูปสร้างคำถามในแต่ละข้อ
+                group.questions.forEach((q, qIndex) => {
+                    const inputId = `input-${group.id}-${qIndex}`;
+                    const iconId = `icon-${group.id}-${qIndex}`;
+                    
+                    html += `
+                    <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
+                        <div class="text-right tracking-wider">${q.q}</div>
+                        <div class="text-center w-4 sm:w-8">=</div>
+                        <div class="flex items-center justify-start relative">
+                            <input type="text" id="${inputId}" oninput="handleInput('${inputId}', '${iconId}')" 
+                                class="w-20 sm:w-28 md:w-36 bg-transparent border-b-2 border-dotted border-gray-500 focus:border-blue-500 text-center transition-colors pb-0 sm:pb-1 text-gray-800" 
+                                placeholder=".........." data-correct="${q.a}">
+                            <div id="${iconId}" class="w-6 sm:w-8 ml-1 sm:ml-2 flex-shrink-0 flex items-center justify-center"></div>
+                        </div>
+                    </div>`;
+                });
+
+                html += `</div></div></div>`;
+                container.innerHTML += html;
+            });
+
+
+
+
+
+
+
+
+
+        }
+
+
+
+        
+
+        // ฟังก์ชันลบลูกน้ำและช่องว่าง
+        function cleanNumber(str) {
+            if (!str) return "";
+            return str.toString().replace(/,/g, '').replace(/\s/g, '');
+        }
+
+        // ฟังก์ชันเมื่อมีการพิมพ์ข้อมูล (ซ่อนไอคอนถูกผิดชั่วคราว)
+        function handleInput(inputId, iconId) {
+            if (isRevealed) return; // ไม่ให้เกิดผลถ้าดูเฉลย
+            document.getElementById(iconId).innerHTML = '';
+        }
+
+        // ฟังก์ชันตรวจคำตอบ
+        function checkAnswers() {
+            if (isRevealed) {
+                // ถ้าดูเฉลยอยู่ ให้รีเซ็ตกลับเป็นโหมดปกติก่อนตรวจ
+                isRevealed = false;
+                const inputs = document.querySelectorAll('input[type="text"]');
+                inputs.forEach(input => {
+                    input.disabled = false;
+                    input.classList.remove('text-red-600', 'font-bold', 'border-transparent');
+                    input.classList.add('text-gray-800', 'border-gray-500');
+                    input.value = ''; // ล้างคำตอบตอนดูเฉลยออก
+                    const iconDiv = input.nextElementSibling;
+                    iconDiv.innerHTML = '';
+                });
+                return; // จบการทำงาน ให้ผู้ใช้กรอกใหม่
+            }
+
+            const inputs = document.querySelectorAll('input[type="text"]');
+            inputs.forEach(input => {
+                const userAns = input.value.trim();
+                const correctAns = input.getAttribute('data-correct');
+                const iconDiv = input.nextElementSibling;
+
+                if (userAns !== "") {
+                    if (cleanNumber(userAns) === cleanNumber(correctAns)) {
+                        // เครื่องหมายถูก
+                        iconDiv.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-7 sm:w-7 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>`;
+                    } else {
+                        // เครื่องหมายผิด
+                        iconDiv.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-7 sm:w-7 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>`;
+                    }
+                } else {
+                    iconDiv.innerHTML = ''; // ถ้าไม่ได้ตอบ ให้ว่างไว้
+                }
+            });
+        }
+
+        // ฟังก์ชันดูเฉลย
+        function revealAnswers() {
+            isRevealed = true;
+            const inputs = document.querySelectorAll('input[type="text"]');
+            inputs.forEach(input => {
+                const correctAns = input.getAttribute('data-correct');
+                // จัดรูปแบบตัวเลขใส่ลูกน้ำ
+                input.value = Number(correctAns).toLocaleString('en-US'); 
+                
+                // เปลี่ยนสไตล์เป็นสีแดงและล็อคช่อง
+                input.disabled = true;
+                input.classList.remove('text-gray-800', 'border-gray-500');
+                input.classList.add('text-red-600', 'font-bold', 'border-transparent');
+                
+                // ล้างไอคอน
+                const iconDiv = input.nextElementSibling;
+                iconDiv.innerHTML = '';
+            });
+        }
+
+        // ฟังก์ชันเริ่มใหม่
+        function resetQuiz() {
+            isRevealed = false;
+            const inputs = document.querySelectorAll('input[type="text"]');
+            inputs.forEach(input => {
+                input.value = '';
+                input.disabled = false;
+                input.classList.remove('text-red-600', 'font-bold', 'border-transparent');
+                input.classList.add('text-gray-800', 'border-gray-500');
+                
+                const iconDiv = input.nextElementSibling;
+                iconDiv.innerHTML = '';
+            });
+        }
+
+
+
+                // ฟังก์ชันเริ่มใหม่
+        function next() {
+            isRevealed = false;
+            const inputs = document.querySelectorAll('input[type="text"]');
+            inputs.forEach(input => {
+                input.value = '';
+                input.disabled = false;
+                input.classList.remove('text-gray-800', 'border-gray-500');
+                input.classList.add('text-red-600', 'font-bold', 'border-transparent');
+                
+                const iconDiv = input.nextElementSibling;
+                iconDiv.innerHTML = '';
+            });
+        }
+
+        // โหลดข้อมูลตอนเปิดหน้าเว็บ
+        window.onload = function() {
+            renderQuiz();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>การคูณทศนิยม - เริ่มเรียนรู้</title>
+    <!-- นำเข้า Tailwind CSS สำหรับการจัดสไตล์อย่างรวดเร็ว -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* เพิ่มเอฟเฟกต์แสงเงาให้กับปุ่มตอนนำเมาส์ไปชี้ */
+        .btn-glow:hover {
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+        }
+        /* แอนิเมชันปุ่มขยับขึ้นลงเบาๆ เพื่อเรียกร้องความสนใจ */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="m-0 p-0 overflow-hidden bg-gray-900">
+
+    <!-- คอนเทนเนอร์หลักที่ครอบคลุมเต็มหน้าจอ -->
+    <div class="relative w-screen h-screen flex justify-center items-center">
+        
+        <!-- วิดีโอพื้นหลัง ปรับให้เต็มจอด้วย object-cover -->
+        <!-- autoplay: เล่นอัตโนมัติ, loop: วนซ้ำ, muted: ปิดเสียง (จำเป็นสำหรับ autoplay ในหลายเบราว์เซอร์), playsinline: เล่นในหน้าเว็บ (สำหรับมือถือ) -->
+        <video 
+            class="absolute top-0 left-0 min-w-full min-h-full w-auto h-auto object-cover z-0" 
+            autoplay 
+            loop 
+            muted 
+            playsinline>
+            <source src="LOOP.mp4" type="video/mp4">
+            ขออภัย เบราว์เซอร์ของคุณไม่รองรับการแสดงผลวิดีโอนี้
+        </video>
+
+        <!-- เงาไล่ระดับสีดำจากด้านล่าง เพื่อให้ปุ่มดูโดดเด่นขึ้นและอ่านง่าย -->
+        <div class="absolute bottom-0 left-0 w-full h-2/5 bg-gradient-to-t from-black/80 to-transparent z-10 pointer-events-none"></div>
+
+        <!-- คอนเทนเนอร์สำหรับจัดวางปุ่มให้อยู่ตรงกลางด้านล่าง -->
+        <div class="absolute inset-0 z-20 flex flex-col justify-end items-center pb-16 sm:pb-20">
+            
+            <!-- ปุ่ม "เริ่มเรียนรู้" -->
+             <a href="code_artifact.html">
+            <button 
+                onclick="startLearning()"
+                class="animate-float group relative px-10 py-4 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full text-white font-bold text-2xl sm:text-3xl border-4 border-white/30 backdrop-blur-sm shadow-xl transition-all duration-300 transform hover:scale-110 btn-glow overflow-hidden">
+                
+                <!-- เอฟเฟกต์แสงสะท้อนวิ่งผ่านปุ่ม -->
+                <span class="absolute top-0 left-[-100%] w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent group-hover:left-[100%] transition-all duration-700 ease-in-out z-10"></span>
+                
+                <span class="relative z-20 drop-shadow-md flex items-center gap-2">
+                    เริ่มเรียนรู้ 
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 transition-transform group-hover:translate-x-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                    </svg>
+                </span>
+            </button>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // ฟังก์ชันเมื่อผู้ใช้กดปุ่ม
+        function startLearning() {
+            // สามารถเพิ่มโค้ดเพื่อเปลี่ยนหน้า หรือเปิด AR ที่นี่
+            console.log("เริ่มเข้าสู่บทเรียน!");
+            
+            // ตัวอย่างเอฟเฟกต์คลิกปุ่ม
+            const btn = document.querySelector('button');
+            btn.classList.remove('animate-float');
+            btn.style.transform = 'scale(0.95)';
+            
+            setTimeout(() => {
+                // สมมติว่าเปลี่ยนหน้าไปที่ lesson.html
+                // window.location.href = 'lesson.html';
+                alert('เตรียมพร้อมเข้าสู่บทเรียน AR!');
+                btn.style.transform = 'scale(1.1)';
+                btn.classList.add('animate-float');
+            }, 200);
+        }
+    </script>
+</body>
+</html>
